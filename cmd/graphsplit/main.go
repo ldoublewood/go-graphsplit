@@ -84,12 +84,18 @@ var chunkCmd = &cli.Command{
 			Value: false,
 			Usage: "add padding to carfile in order to convert it to piece file",
 		},
+		&cli.UintFlag{
+			Name:  "skip-count",
+			Value: 0,
+			Usage: "the count of output file to skip",
+		},
 	},
 	Action: func(c *cli.Context) error {
 		ctx := context.Background()
 		parallel := c.Uint("parallel")
 		sliceSize := c.Uint64("slice-size")
 		parentPath := c.String("parent-path")
+		skipCount := c.Uint("skip-count")
 		carDir := c.String("car-dir")
 		if !graphsplit.ExistDir(carDir) {
 			return xerrors.Errorf("Unexpected! The path of car-dir does not exist")
@@ -108,7 +114,7 @@ var chunkCmd = &cli.Command{
 		} else {
 			cb = graphsplit.ErrCallback()
 		}
-		return graphsplit.Chunk(ctx, int64(sliceSize), parentPath, targetPath, carDir, graphName, int(parallel), cb)
+		return graphsplit.Chunk(ctx, int64(sliceSize), parentPath, targetPath, carDir, graphName, int(parallel), int(skipCount), cb)
 	},
 }
 

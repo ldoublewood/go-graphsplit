@@ -124,7 +124,7 @@ func ErrCallback() GraphBuildCallback {
 	return &errCallback{}
 }
 
-func Chunk(ctx context.Context, sliceSize int64, parentPath, targetPath, carDir, graphName string, parallel int, cb GraphBuildCallback) error {
+func Chunk(ctx context.Context, sliceSize int64, parentPath, targetPath, carDir, graphName string, parallel int, skipCount int, cb GraphBuildCallback) error {
 	var cumuSize int64 = 0
 	graphSliceCount := 0
 	graphFiles := make([]Finfo, 0)
@@ -154,11 +154,13 @@ func Chunk(ctx context.Context, sliceSize int64, parentPath, targetPath, carDir,
 		case cumuSize+fileSize == sliceSize:
 			cumuSize += fileSize
 			graphFiles = append(graphFiles, item)
-			// todo build ipld from graphFiles
-			BuildIpldGraph(ctx, graphFiles, GenGraphName(graphName, graphSliceCount, sliceTotal), parentPath, carDir, parallel, cb)
-			fmt.Printf("cumu-size: %d\n", cumuSize)
-			fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
-			fmt.Printf("=================\n")
+			if (graphSliceCount + 1) > skipCount {
+				// todo build ipld from graphFiles
+				BuildIpldGraph(ctx, graphFiles, GenGraphName(graphName, graphSliceCount, sliceTotal), parentPath, carDir, parallel, cb)
+				fmt.Printf("cumu-size: %d\n", cumuSize)
+				fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
+				fmt.Printf("=================\n")
+			}
 			cumuSize = 0
 			graphFiles = make([]Finfo, 0)
 			graphSliceCount++
@@ -180,11 +182,13 @@ func Chunk(ctx context.Context, sliceSize int64, parentPath, targetPath, carDir,
 				SeekEnd:   seekEnd,
 			})
 			fileSliceCount++
-			// todo build ipld from graphFiles
-			BuildIpldGraph(ctx, graphFiles, GenGraphName(graphName, graphSliceCount, sliceTotal), parentPath, carDir, parallel, cb)
-			fmt.Printf("cumu-size: %d\n", cumuSize+firstCut)
-			fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
-			fmt.Printf("=================\n")
+			if (graphSliceCount + 1) > skipCount {
+				// todo build ipld from graphFiles
+				BuildIpldGraph(ctx, graphFiles, GenGraphName(graphName, graphSliceCount, sliceTotal), parentPath, carDir, parallel, cb)
+				fmt.Printf("cumu-size: %d\n", cumuSize+firstCut)
+				fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
+				fmt.Printf("=================\n")
+			}
 			cumuSize = 0
 			graphFiles = make([]Finfo, 0)
 			graphSliceCount++
@@ -206,11 +210,13 @@ func Chunk(ctx context.Context, sliceSize int64, parentPath, targetPath, carDir,
 				})
 				fileSliceCount++
 				if seekEnd-seekStart == sliceSize-1 {
-					// todo build ipld from graphFiles
-					BuildIpldGraph(ctx, graphFiles, GenGraphName(graphName, graphSliceCount, sliceTotal), parentPath, carDir, parallel, cb)
-					fmt.Printf("cumu-size: %d\n", sliceSize)
-					fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
-					fmt.Printf("=================\n")
+					if (graphSliceCount + 1) > skipCount {
+						// todo build ipld from graphFiles
+						BuildIpldGraph(ctx, graphFiles, GenGraphName(graphName, graphSliceCount, sliceTotal), parentPath, carDir, parallel, cb)
+						fmt.Printf("cumu-size: %d\n", sliceSize)
+						fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
+						fmt.Printf("=================\n")
+					}
 					cumuSize = 0
 					graphFiles = make([]Finfo, 0)
 					graphSliceCount++
@@ -220,11 +226,13 @@ func Chunk(ctx context.Context, sliceSize int64, parentPath, targetPath, carDir,
 		}
 	}
 	if cumuSize > 0 {
-		// todo build ipld from graphFiles
-		BuildIpldGraph(ctx, graphFiles, GenGraphName(graphName, graphSliceCount, sliceTotal), parentPath, carDir, parallel, cb)
-		fmt.Printf("cumu-size: %d\n", cumuSize)
-		fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
-		fmt.Printf("=================\n")
+		if (graphSliceCount + 1) > skipCount {
+			// todo build ipld from graphFiles
+			BuildIpldGraph(ctx, graphFiles, GenGraphName(graphName, graphSliceCount, sliceTotal), parentPath, carDir, parallel, cb)
+			fmt.Printf("cumu-size: %d\n", cumuSize)
+			fmt.Printf(GenGraphName(graphName, graphSliceCount, sliceTotal))
+			fmt.Printf("=================\n")
+		}
 	}
 	return nil
 }
